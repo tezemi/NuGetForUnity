@@ -64,6 +64,11 @@ namespace NugetForUnity.Ui
         private bool shouldShowPackagesConfigPathWarning;
 
         /// <summary>
+        ///     Indicates if the warning for the nuget.config file path should be shown.
+        /// </summary>
+        private bool shouldShowNuGetConfigPathWarning;
+
+        /// <summary>
         ///     The current position of the scroll bar in the GUI for the list of sources.
         /// </summary>
         private Vector2 sourcesScrollPosition;
@@ -173,10 +178,41 @@ namespace NugetForUnity.Ui
                 }
             }
 
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                var nuGetConfigFilePath = ConfigurationManager.NugetConfigFileDirectoryPath;                
+
+                GUILayout.Label(
+                    new GUIContent("NuGet Config path:", $"Absolute path: {nuGetConfigFilePath}"),
+                    GUILayout.Width(EditorGUIUtility.labelWidth));
+                GUILayout.Label(ConfigurationManager.NugetConfigFileDirectoryPath);
+
+                if (GUILayout.Button("Browse", GUILayout.Width(100)))
+                {
+                    var newPath = EditorUtility.OpenFolderPanel("Select Folder", nuGetConfigFilePath, string.Empty);
+
+                    if (!string.IsNullOrEmpty(newPath) && newPath != nuGetConfigFilePath)
+                    {
+                        // if the path root is different or it is not under Assets folder, we want to show a warning message
+                        shouldShowNuGetConfigPathWarning = !UnityPathHelper.IsPathInAssets(newPath);
+
+                        ConfigurationManager.Move(newPath);
+                        preferencesChangedThisFrame = true;
+                    }
+                }
+            }
+
             if (shouldShowPackagesConfigPathWarning)
             {
                 EditorGUILayout.HelpBox(
                     "The packages.config is placed outside of Assets folder, this disables the functionality of automatically restoring packages if the file is changed on the disk.",
+                    MessageType.Warning);
+            }
+
+            if (shouldShowNuGetConfigPathWarning)
+            {
+                EditorGUILayout.HelpBox(
+                    "The nuget.config is placed outside of Assets folder.",
                     MessageType.Warning);
             }
 

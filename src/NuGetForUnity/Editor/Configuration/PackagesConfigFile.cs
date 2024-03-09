@@ -173,6 +173,7 @@ namespace NugetForUnity.Configuration
             var oldFilePath = nugetConfig.PackagesConfigFilePath;
             var oldPath = nugetConfig.PackagesConfigDirectoryPath;
             nugetConfig.PackagesConfigDirectoryPath = newPath;
+            EditorPrefs.SetString(nameof(nugetConfig.PackagesConfigDirectoryPath), newPath);
             var newFilePath = Path.GetFullPath(Path.Combine(newPath, FileName));
             try
             {
@@ -195,6 +196,7 @@ namespace NugetForUnity.Configuration
                 // usually unauthorized access or IO exception (trying to move to a folder where the same file exists)
                 Debug.LogException(e);
                 nugetConfig.PackagesConfigDirectoryPath = oldPath;
+                EditorPrefs.SetString(nameof(nugetConfig.PackagesConfigDirectoryPath), oldPath);
                 return;
             }
 
@@ -215,6 +217,8 @@ namespace NugetForUnity.Configuration
                     File.Delete($"{oldPath}.meta");
                 }
             }
+
+            AssetDatabase.Refresh();
         }
 
         /// <summary>

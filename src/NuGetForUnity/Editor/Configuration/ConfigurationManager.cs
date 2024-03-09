@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using NugetForUnity.Helper;
 using NugetForUnity.Models;
 using NugetForUnity.PackageSource;
 using NugetForUnity.PluginSupport;
+using UnityEditor;
 using UnityEngine;
 
 [assembly: InternalsVisibleTo("NuGetForUnity.Editor.Tests")]
@@ -34,7 +36,7 @@ namespace NugetForUnity.Configuration
 
         static ConfigurationManager()
         {
-            NugetConfigFileDirectoryPath = UnityPathHelper.AbsoluteAssetsPath;
+            NugetConfigFileDirectoryPath = EditorPrefs.GetString(nameof(NugetConfigFileDirectoryPath), Application.dataPath);
             NugetConfigFilePath = Path.Combine(NugetConfigFileDirectoryPath, NugetConfigFile.FileName);
         }
 
@@ -45,7 +47,7 @@ namespace NugetForUnity.Configuration
         ///     <see cref="NugetConfigFile" />.
         /// </remarks>
         [NotNull]
-        public static string NugetConfigFilePath { get; }
+        public static string NugetConfigFilePath { get; private set; }
 
         /// <summary>
         ///     Gets the loaded NuGet.config file that holds the settings for NuGet.
@@ -69,7 +71,7 @@ namespace NugetForUnity.Configuration
         ///     Gets the path to the directory containing the NuGet.config file.
         /// </summary>
         [NotNull]
-        internal static string NugetConfigFileDirectoryPath { get; }
+        internal static string NugetConfigFileDirectoryPath { get; set; }
 
         /// <summary>
         ///     Gets a value indicating whether verbose logging is enabled.
@@ -158,6 +160,48 @@ namespace NugetForUnity.Configuration
             }
 
             PluginRegistry.InitPlugins();
+        }
+
+        internal static void Move([NotNull] string newPath)
+        {
+            var oldPath = NugetConfigFileDirectoryPath;
+            var oldFilePath = NugetConfigFilePath;
+
+            NugetConfigFileDirectoryPath = newPath;
+            NugetConfigFilePath = Path.Combine(newPath, NugetConfigFile.FileName);
+            EditorPrefs.SetString(nameof(NugetConfigFileDirectoryPath), newPath);
+
+            try
+            {
+                if (!File.Exists(oldFilePath))
+                {
+                    LoadNugetConfigFile();
+
+                    AssetDatabase.Refresh();
+                    return;
+                }
+
+                Directory.CreateDirectory(newPath);
+
+                File.Move(oldFilePath, NugetConfigFilePath);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+
+                NugetConfigFileDirectoryPath = oldPath;
+                EditorPrefs.SetString(nameof(NugetConfigFileDirectoryPath), oldPath);
+
+                return;
+            }
+
+            // manually moving meta file to suppress Unity warning
+            if (File.Exists($"{oldFilePath}.meta"))
+            {
+                File.Move($"{oldFilePath}.meta", $"{NugetConfigFilePath}.meta");
+            }
+
+            AssetDatabase.Refresh();
         }
 
         /// <summary>

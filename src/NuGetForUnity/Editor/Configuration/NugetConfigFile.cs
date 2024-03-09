@@ -10,6 +10,7 @@ using System.Xml.Linq;
 using JetBrains.Annotations;
 using NugetForUnity.Helper;
 using NugetForUnity.PackageSource;
+using UnityEditor;
 using UnityEngine;
 
 #region No ReShaper
@@ -121,7 +122,7 @@ namespace NugetForUnity.Configuration
         ///     Gets or sets absolute path to directory containing packages.config file.
         /// </summary>
         [NotNull]
-        public string PackagesConfigDirectoryPath { get; set; } = Application.dataPath;
+        public string PackagesConfigDirectoryPath { get; set; } = EditorPrefs.GetString(nameof(PackagesConfigDirectoryPath), Application.dataPath);
 
         /// <summary>
         ///     Gets the relative path to directory containing packages.config file. The path is relative to the folder containing the 'NuGet.config' file.
