@@ -1,5 +1,5 @@
 {
-    "name": "com.github-glitchenzo.nugetforunity",
+    "name": "com.tezemi.nugetforunity",
     "displayName": "NuGetForUnity",
     "version": "4.0.2",
     "description": "A NuGet Package Manager for Unity",
@@ -9,6 +9,10 @@
         "unity"
     ],
     "license": "MIT",
+	"author": {
+		"name": "Tezemi",
+		"url": "https://github.com/tezemi"
+	},
     "licensesUrl": "https://github.com/GlitchEnzo/NuGetForUnity/blob/master/LICENSE",
     "changelogUrl": "https://github.com/GlitchEnzo/NuGetForUnity/releases",
     "documentationUrl": "https://github.com/GlitchEnzo/NuGetForUnity"
