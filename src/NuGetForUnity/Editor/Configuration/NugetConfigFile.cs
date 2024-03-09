@@ -369,6 +369,11 @@ namespace NugetForUnity.Configuration
   </config>
 </configuration>";
 
+            if (!Directory.Exists(Path.GetDirectoryName(filePath)))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            }
+
             File.WriteAllText(filePath, contents, new UTF8Encoding());
 
             return Load(filePath);

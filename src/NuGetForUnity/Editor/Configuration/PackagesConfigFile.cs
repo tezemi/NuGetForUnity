@@ -38,8 +38,6 @@ namespace NugetForUnity.Configuration
         [NotNull]
         public static PackagesConfigFile Load()
         {
-            Debug.Log(ConfigurationManager.NugetConfigFile.PackagesConfigFilePath);
-
             var filePath = ConfigurationManager.NugetConfigFile.PackagesConfigFilePath;
             var configFile = new PackagesConfigFile { Packages = new List<PackageConfig>() };
 
@@ -47,6 +45,11 @@ namespace NugetForUnity.Configuration
             if (!File.Exists(filePath))
             {
                 Debug.LogFormat("No packages.config file found. Creating default at {0}", filePath);
+
+                if (!Directory.Exists(Path.GetDirectoryName(filePath)))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                }
 
                 configFile.Save();
             }
