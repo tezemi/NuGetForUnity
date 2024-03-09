@@ -38,6 +38,8 @@ namespace NugetForUnity.Configuration
         [NotNull]
         public static PackagesConfigFile Load()
         {
+            Debug.Log(ConfigurationManager.NugetConfigFile.PackagesConfigFilePath);
+
             var filePath = ConfigurationManager.NugetConfigFile.PackagesConfigFilePath;
             var configFile = new PackagesConfigFile { Packages = new List<PackageConfig>() };
 
@@ -204,18 +206,6 @@ namespace NugetForUnity.Configuration
             if (File.Exists($"{oldFilePath}.meta"))
             {
                 File.Move($"{oldFilePath}.meta", $"{newFilePath}.meta");
-            }
-
-            // if the old path is now an empty directory, delete it
-            if (!Directory.EnumerateFileSystemEntries(oldPath).Any())
-            {
-                Directory.Delete(oldPath);
-
-                // also delete its meta file if it exists
-                if (File.Exists($"{oldPath}.meta"))
-                {
-                    File.Delete($"{oldPath}.meta");
-                }
             }
 
             AssetDatabase.Refresh();

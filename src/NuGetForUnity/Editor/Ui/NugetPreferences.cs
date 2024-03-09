@@ -183,9 +183,9 @@ namespace NugetForUnity.Ui
                 var nuGetConfigFilePath = ConfigurationManager.NugetConfigFileDirectoryPath;                
 
                 GUILayout.Label(
-                    new GUIContent("NuGet Config path:", $"Absolute path: {nuGetConfigFilePath}"),
+                    new GUIContent("NuGet Config path:", $"Absolute path: {ConfigurationManager.FullNugetConfigFilePath}"),
                     GUILayout.Width(EditorGUIUtility.labelWidth));
-                GUILayout.Label(ConfigurationManager.NugetConfigFileDirectoryPath);
+                GUILayout.Label(string.IsNullOrEmpty(nuGetConfigFilePath) ? "." : nuGetConfigFilePath);
 
                 if (GUILayout.Button("Browse", GUILayout.Width(100)))
                 {
@@ -195,6 +195,9 @@ namespace NugetForUnity.Ui
                     {
                         // if the path root is different or it is not under Assets folder, we want to show a warning message
                         shouldShowNuGetConfigPathWarning = !UnityPathHelper.IsPathInAssets(newPath);
+
+                        newPath = newPath.Replace(Application.dataPath + "/", string.Empty);
+                        newPath = newPath.Replace(Application.dataPath, string.Empty);
 
                         ConfigurationManager.Move(newPath);
                         preferencesChangedThisFrame = true;
@@ -507,7 +510,7 @@ namespace NugetForUnity.Ui
 
             if (GUILayout.Button("Reset To Default"))
             {
-                NugetConfigFile.CreateDefaultFile(ConfigurationManager.NugetConfigFilePath);
+                NugetConfigFile.CreateDefaultFile(ConfigurationManager.FullNugetConfigFilePath);
                 ConfigurationManager.LoadNugetConfigFile();
                 preferencesChangedThisFrame = true;
             }
@@ -517,7 +520,7 @@ namespace NugetForUnity.Ui
                 return;
             }
 
-            ConfigurationManager.NugetConfigFile.Save(ConfigurationManager.NugetConfigFilePath);
+            ConfigurationManager.NugetConfigFile.Save(ConfigurationManager.FullNugetConfigFilePath);
 
             if (sourcePathChangedThisFrame)
             {

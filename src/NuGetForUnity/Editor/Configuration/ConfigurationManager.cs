@@ -36,7 +36,7 @@ namespace NugetForUnity.Configuration
 
         static ConfigurationManager()
         {
-            NugetConfigFileDirectoryPath = EditorPrefs.GetString(nameof(NugetConfigFileDirectoryPath), Application.dataPath);
+            NugetConfigFileDirectoryPath = EditorPrefs.GetString(nameof(NugetConfigFileDirectoryPath), string.Empty);
             NugetConfigFilePath = Path.Combine(NugetConfigFileDirectoryPath, NugetConfigFile.FileName);
         }
 
@@ -48,6 +48,11 @@ namespace NugetForUnity.Configuration
         /// </remarks>
         [NotNull]
         public static string NugetConfigFilePath { get; private set; }
+
+        /// <summary>
+        /// Gets the absolute path to the nuget.config file.
+        /// </summary>
+        public static string FullNugetConfigFilePath => Path.Combine(Application.dataPath, NugetConfigFilePath);
 
         /// <summary>
         ///     Gets the loaded NuGet.config file that holds the settings for NuGet.
@@ -103,15 +108,15 @@ namespace NugetForUnity.Configuration
         /// </summary>
         public static void LoadNugetConfigFile()
         {
-            if (File.Exists(NugetConfigFilePath))
+            if (File.Exists(FullNugetConfigFilePath))
             {
-                nugetConfigFile = NugetConfigFile.Load(NugetConfigFilePath);
+                nugetConfigFile = NugetConfigFile.Load(FullNugetConfigFilePath);
             }
             else
             {
-                Debug.LogFormat("No NuGet.config file found. Creating default at {0}", NugetConfigFilePath);
+                Debug.LogFormat("No NuGet.config file found. Creating default at {0}", FullNugetConfigFilePath);
 
-                nugetConfigFile = NugetConfigFile.CreateDefaultFile(NugetConfigFilePath);
+                nugetConfigFile = NugetConfigFile.CreateDefaultFile(FullNugetConfigFilePath);
             }
 
             // parse any command line arguments
@@ -162,18 +167,26 @@ namespace NugetForUnity.Configuration
             PluginRegistry.InitPlugins();
         }
 
+        /// <summary>
+        /// Moves the nuget.config file to the specified relative path.
+        /// </summary>
+        /// <param name="newPath">The new path of the nuget.config file without
+        /// the file name. Relative to the assets folder.</param>
         internal static void Move([NotNull] string newPath)
         {
             var oldPath = NugetConfigFileDirectoryPath;
             var oldFilePath = NugetConfigFilePath;
+            var oldFullFilePath = FullNugetConfigFilePath;
 
             NugetConfigFileDirectoryPath = newPath;
             NugetConfigFilePath = Path.Combine(newPath, NugetConfigFile.FileName);
-            EditorPrefs.SetString(nameof(NugetConfigFileDirectoryPath), newPath);
+            EditorPrefs.SetString(nameof(NugetConfigFileDirectoryPath), newPath);        
+
+            Debug.Log(FullNugetConfigFilePath);
 
             try
             {
-                if (!File.Exists(oldFilePath))
+                if (!File.Exists(oldFullFilePath))
                 {
                     LoadNugetConfigFile();
 
@@ -181,24 +194,25 @@ namespace NugetForUnity.Configuration
                     return;
                 }
 
-                Directory.CreateDirectory(newPath);
+                Directory.CreateDirectory(Path.Combine(Application.dataPath, NugetConfigFileDirectoryPath));
 
-                File.Move(oldFilePath, NugetConfigFilePath);
+                File.Move(oldFullFilePath, FullNugetConfigFilePath);
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
 
                 NugetConfigFileDirectoryPath = oldPath;
+                NugetConfigFilePath = Path.Combine(oldPath, NugetConfigFile.FileName);
                 EditorPrefs.SetString(nameof(NugetConfigFileDirectoryPath), oldPath);
 
                 return;
             }
 
             // manually moving meta file to suppress Unity warning
-            if (File.Exists($"{oldFilePath}.meta"))
+            if (File.Exists($"{oldFullFilePath}.meta"))
             {
-                File.Move($"{oldFilePath}.meta", $"{NugetConfigFilePath}.meta");
+                File.Move($"{oldFullFilePath}.meta", $"{FullNugetConfigFilePath}.meta");
             }
 
             AssetDatabase.Refresh();
